@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Store.Models;
 
 namespace Store.Controllers
@@ -29,6 +30,26 @@ namespace Store.Controllers
             _context.SaveChanges();
 
             return Ok(order);
+        }
+        [HttpGet("byEmail")]
+        public IActionResult GetOrdersByEmail([FromQuery] string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                return BadRequest("Email is required.");
+            }
+
+            var orders = _context.Orders
+                .Include(o => o.OrderItems) // Включаем элементы заказа
+                .Where(o => o.Email == email) // Фильтруем по email
+                .ToList();
+
+            if (!orders.Any())
+            {
+                return NotFound("No orders found for this email.");
+            }
+
+            return Ok(orders);
         }
     }
 }
